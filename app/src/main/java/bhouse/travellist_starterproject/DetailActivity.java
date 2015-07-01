@@ -6,7 +6,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Animatable;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.v7.graphics.Palette;
+import android.transition.Transition;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.animation.AlphaAnimation;
@@ -79,7 +83,13 @@ public class DetailActivity extends Activity implements View.OnClickListener {
   }
 
   private void windowTransition() {
-
+    getWindow().getEnterTransition().addListener(new TransitionAdapter() {
+      @Override
+      public void onTransitionEnd(Transition transition) {
+        mAddButton.animate().alpha(1.0f);
+        getWindow().getEnterTransition().removeListener(this);
+      }
+    });
   }
 
   private void addToDo(String todo) {
@@ -88,30 +98,43 @@ public class DetailActivity extends Activity implements View.OnClickListener {
 
   private void getPhoto() {
     Bitmap photo = BitmapFactory.decodeResource(getResources(), mPlace.getImageResourceId(this));
+    colorize(photo);
   }
 
   private void colorize(Bitmap photo) {
+    Palette mPalette = Palette.generate(photo);
+    applyPalette(mPalette);
   }
 
-  private void applyPalette() {
-
+  private void applyPalette(Palette mPalette) {
+    getWindow().setBackgroundDrawable(new ColorDrawable(mPalette.getDarkMutedColor(defaultColor)));
+    mTitleHolder.setBackgroundColor(mPalette.getMutedColor(defaultColor));
+    mRevealView.setBackgroundColor(mPalette.getLightVibrantColor(defaultColor));
   }
 
   @Override
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.btn_add:
+
+        Animatable mAnimatable;
         if (!isEditTextVisible) {
           revealEditText(mRevealView);
           mEditTextTodo.requestFocus();
           mInputManager.showSoftInput(mEditTextTodo, InputMethodManager.SHOW_IMPLICIT);
 
+          mAddButton.setImageResource(R.drawable.icn_morph);
+          mAnimatable = (Animatable) (mAddButton).getDrawable();
+          mAnimatable.start();
         } else {
           addToDo(mEditTextTodo.getText().toString());
           mToDoAdapter.notifyDataSetChanged();
           mInputManager.hideSoftInputFromWindow(mEditTextTodo.getWindowToken(), 0);
           hideEditText(mRevealView);
 
+          mAddButton.setImageResource(R.drawable.icon_morph_reverse);
+          mAnimatable = (Animatable) (mAddButton).getDrawable();
+          mAnimatable.start();
         }
     }
   }
