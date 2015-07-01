@@ -1,12 +1,15 @@
 package bhouse.travellist_starterproject;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -16,6 +19,8 @@ public class MainActivity extends Activity {
 
     private RecyclerView mRecyclerView;
     private StaggeredGridLayoutManager mStaggeredLayoutManager;
+
+  private TravelListAdapter mAdapter;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +32,22 @@ public class MainActivity extends Activity {
       mRecyclerView = (RecyclerView) findViewById(R.id.list);
       mStaggeredLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
       mRecyclerView.setLayoutManager(mStaggeredLayoutManager);
+
+    mAdapter = new TravelListAdapter(this);
+    mRecyclerView.setAdapter(mAdapter);
+
+    TravelListAdapter.OnItemClickListener onItemClickListener = new TravelListAdapter.OnItemClickListener() {
+      @Override
+      public void onItemClick(View view, int position) {
+        Toast.makeText(MainActivity.this, "Clicked " + position, Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+        intent.putExtra(DetailActivity.EXTRA_PARAM_ID, position);
+        startActivity(intent);
+      }
+    };
+
+    mAdapter.setOnItemClickListener(onItemClickListener);
   }
 
   private void setUpActionBar() {
@@ -54,11 +75,14 @@ public class MainActivity extends Activity {
 
   private void toggle() {
     MenuItem item = menu.findItem(R.id.action_toggle);
+
     if (isListView) {
+      mStaggeredLayoutManager.setSpanCount(2);
       item.setIcon(R.drawable.ic_action_list);
       item.setTitle("Show as list");
       isListView = false;
     } else {
+      mStaggeredLayoutManager.setSpanCount(1);
       item.setIcon(R.drawable.ic_action_grid);
       item.setTitle("Show as grid");
       isListView = true;
